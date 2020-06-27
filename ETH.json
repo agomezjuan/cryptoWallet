@@ -1,0 +1,9 @@
+{
+    "transactions": [
+        {
+            "timestamp": "Fri Jun 26 18:50:31 2020",
+            "coin": "ETH",
+            "amount": 234.0
+        }
+    ]
+}

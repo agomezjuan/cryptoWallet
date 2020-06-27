@@ -1,0 +1,19 @@
+{
+    "transactions": [
+        {
+            "timestamp": "Fri Jun 26 20:05:36 2020",
+            "coin": "XRP",
+            "amount": 1.0
+        },
+        {
+            "timestamp": "Fri Jun 26 20:15:44 2020",
+            "coin": "XRP",
+            "amount": 6.0
+        },
+        {
+            "timestamp": "Fri Jun 26 22:41:23 2020",
+            "coin": "XRP",
+            "amount": 123.0
+        }
+    ]
+}
