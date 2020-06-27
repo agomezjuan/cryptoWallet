@@ -1,0 +1,15 @@
+{
+    "account": [
+        {
+            "timestamp": "Sat Jun 27 14:53:21 2020",
+            "code": "6C5ZJA"
+        }
+    ],
+    "transactions": [
+        {
+            "timestamp": "Sat Jun 27 15:50:24 2020",
+            "coin": "ETH",
+            "amount": 0.65
+        }
+    ]
+}

@@ -1,0 +1,15 @@
+{
+    "account": [
+        {
+            "timestamp": "Sat Jun 27 14:28:48 2020",
+            "code": "NA6AC2"
+        }
+    ],
+    "transactions": [
+        {
+            "timestamp": "Sat Jun 27 14:41:40 2020",
+            "coin": "XRP",
+            "amount": 233.0
+        }
+    ]
+}
