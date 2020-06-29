@@ -48,6 +48,18 @@
                 "origin": "YBCOQ4",
                 "amount": 0.5,
                 "receiver": "EDAJOI"
+            },
+            {
+                "timestamp": "Mon Jun 29 08:56:56 2020",
+                "origin": "EDAJOI",
+                "amount": -4.0,
+                "receiver": "YBCOQ4"
+            },
+            {
+                "timestamp": "Mon Jun 29 09:29:33 2020",
+                "origin": "EDAJOI",
+                "amount": -0.12,
+                "receiver": "VE7CWO"
             }
         ],
         "ETH": [

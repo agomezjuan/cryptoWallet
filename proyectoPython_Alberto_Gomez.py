@@ -60,7 +60,7 @@ def update_registry_sender(code, coin, amount, receiver):
 		# Los datos se guardan en el archivo
 		with open('accounts/' + code + '.json', 'w') as f:
 			json.dump(data, f, indent=4)
-			print("\nSe han transferido " + str(amount) + " " + coin + " a la cuenta " + receiver + ".")
+			print("\nSe han transferido " + str(amount) + " " + coin + " desde la cuenta " + code + ".")
 
 
 # Actualizar cuenta destinataria
@@ -177,11 +177,43 @@ def transfer(code):
 			print ("Has superado el límite de intentos. Hasta pronto!\n")
 			exit()
 
-	# Si ma moneda es correcta se pide la cantidad a recibir
-	amount = float(input("Indique la cantidad de " + coin + " que va a transferir: "))
+	i = 7
+	while True:
+		try:
+			# Si ma moneda es correcta se pide la cantidad a recibir
+			amount = float(input("Indique la cantidad de " + coin + " que va a transferir: "))
+			break
+		except ValueError:
+			msg = "Por favor escriba un valor numérico: "
+			i = i - 1
+			invalid_input(i, msg)
+
+	# Validacion de saldo suficiente
+	with open('accounts/' + code + '.json', 'r') as f:
+		data = json.load(f)
+
+	# Consulta todas las transacciones
+	transactions = data['transactions'][coin]
+
+	balance = 0
+	for value in transactions:
+		balance = balance + value['amount']
+
+	i = 5
+	while amount > balance:
+		msg = "Su saldo es insuficiente para transferir esa cantidad. Límite de intentos " + str(i-1) + "\n" + \
+			  "Solo puede transferir hasta " + str(round(balance, 4)) + " " + coin
+
+		invalid_input(i, msg)
+		i = i - 1
+		try:
+			amount = float(input("Indique la cantidad de " + coin + " que va a transferir: "))
+		except ValueError:
+			print("Por favor escriba un valor numérico: ")
 
 	j = 3
 	while True:
+
 		# Cuenta de destino
 		receiver = input("Indique el código de cuenta de destino: ").upper()
 
@@ -269,11 +301,13 @@ def global_balance(code):
 
 		wallet_global_balance = balance_btcusd + balance_ethusd + balance_xrpusd
 
-		print ("\nEl balance de Bitcoin es: " + str(balance_btc) + " BTC.")
-		print ("El balance de Ethereum es: " + str(balance_eth) + " ETH.")
-		print ("El balance de Ripple es: " + str(balance_xrp) + " XRP.\n")
-
-		print ("El saldo total de su billetera en USD es: $" + str(round(wallet_global_balance, 2)))
+		print ("\nCriptomoneda		Balance			USD")
+		print ("-----------------------------------------------------------")
+		print ("Bitcoin			" + str(round(balance_btc, 5)) + " BTC. 		$ " + str(round(balance_btcusd, 2)))
+		print ("Ethereum		" + str(round(balance_eth, 5)) + " ETH. 		$ " + str(round(balance_ethusd, 2)))
+		print ("Ripple			" + str(round(balance_xrp, 5)) + " XRP. 		$ " + str(round(balance_xrpusd, 2)))
+		print ("-----------------------------------------------------------")
+		print ("\nEl saldo total de su billetera en USD es: $ " + str(round(wallet_global_balance, 2)))
 
 
 # Funcion consultar historial
@@ -364,7 +398,7 @@ def operations(code):
 			   "3. Mostrar balance en moneda específica\n"
 			   "4. Mostrar balance general\n"
 			   "5. Mostrar histórico de transacciones\n"
-			   "6. Salir del programa\n")
+			   "6. Salir de la cuenta\n")
 
 		option = input("")
 
@@ -384,6 +418,7 @@ def operations(code):
 			clear()
 			print("Ha escogido Mostrar balance en moneda específica")
 			balance_coin(code)
+			success_end(code)
 			break
 		elif option == '4':
 			clear()
@@ -400,7 +435,7 @@ def operations(code):
 		elif option == '6':
 			clear()
 			print ("Hasta pronto!\n")
-			exit()
+			Wallet()
 		else:
 			msg = "Seleccione una opción válida.\n"
 			invalid_input(i, msg)
