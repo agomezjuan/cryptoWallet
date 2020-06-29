@@ -455,7 +455,7 @@ class Wallet:
 				else:
 					exit_program()
 			elif self.account == '3':
-				exit_program()
+				exit()
 			else:
 				msg = "Seleccione una opción válida.\n"
 				invalid_input(i, msg)
