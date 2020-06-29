@@ -51,8 +51,21 @@
                 "timestamp": "Sun Jun 28 10:22:02 2020",
                 "origin": "Deposit",
                 "amount": 1.226
+            },
+            {
+                "timestamp": "Sun Jun 28 19:43:06 2020",
+                "origin": "Deposit",
+                "amount": 1.5,
+                "receiver": "VE7CWO"
             }
         ],
-        "XRP": []
+        "XRP": [
+            {
+                "timestamp": "Sun Jun 28 19:01:29 2020",
+                "origin": "EDAJOI",
+                "amount": 2100.0,
+                "receiver": "VE7CWO"
+            }
+        ]
     }
 }

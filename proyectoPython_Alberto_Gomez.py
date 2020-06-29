@@ -1,21 +1,23 @@
 # -*- coding: utf-8 -*-
 
-import os
-from os import path
-from datetime import datetime
-from requests import Request, Session
-from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
-import string
-import random
 import json
+import os
+import random
+import string
+from datetime import datetime
+from os import path
+
+from requests import Session
+from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
 
 
 # Consulta coinmarketcap
 def coinmarket_api():
+	# Llamado a la API de coinmarketcap
 	url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest'
 
 	parameters = {
-		'symbol': ['BTC', 'ETH', 'XRP']
+		'symbol': 'BTC,ETH,XRP'
 	}
 	headers = {
 		'Accepts': 'application/json',
@@ -42,17 +44,15 @@ def account_generator(size=6, chars=string.ascii_uppercase + string.digits):
 def update_registry_sender(code, coin, amount, receiver):
 	# Si la cuenta existe se actualiza la nueva transaccion
 	if path.isfile('accounts/' + code + '.json'):
-
 		# Lectura del historial de transacciones
 		with open('accounts/' + code + '.json', 'r') as f:
 			data = json.load(f)
 
 		# Nueva transaccion para actualizar
 		timestamp = datetime.now().ctime()
-		data['transactions'].append({
+		data['transactions'][coin].append({
 			'timestamp': timestamp,
 			'origin': code,
-			'coin': coin,
 			'amount': amount * (-1),
 			'receiver': receiver
 		})
@@ -61,37 +61,21 @@ def update_registry_sender(code, coin, amount, receiver):
 		with open('accounts/' + code + '.json', 'w') as f:
 			json.dump(data, f, indent=4)
 			print("\nSe han transferido " + str(amount) + " " + coin + " a la cuenta " + receiver + ".")
-	else:
-		# Si el archivo no existe se preparan los datos para la primera transaccion
-		data = {}
-		timestamp = datetime.now().ctime()
-		data['transactions'].append({
-			'timestamp': timestamp,
-			'origin': code,
-			'coin': coin,
-			'amount': amount * (-1),
-			'receiver': receiver
-		})
-		# Se crea la cuenta con la primera transaccion
-		with open('accounts/' + code + '.json', 'w') as f:
-			json.dump(data, f, indent=4)
 
 
 # Actualizar cuenta destinataria
 def update_registry_receiver(code, coin, amount, receiver):
 	# Si la cuenta existe se actualiza la nueva transaccion
 	if path.isfile('accounts/' + receiver + '.json'):
-
 		# Lectura del historial de transacciones
 		with open('accounts/' + receiver + '.json', 'r') as f:
 			data = json.load(f)
 
 		# Nueva transaccion para actualizar
 		timestamp = datetime.now().ctime()
-		data['transactions'].append({
+		data['transactions'][coin].append({
 			'timestamp': timestamp,
 			'origin': code,
-			'coin': coin,
 			'amount': amount,
 			'receiver': receiver
 		})
@@ -100,20 +84,6 @@ def update_registry_receiver(code, coin, amount, receiver):
 		with open('accounts/' + receiver + '.json', 'w') as f:
 			json.dump(data, f, indent=4)
 			print("Se recibieron correctamente " + str(amount) + " " + coin + " en la cuenta " + receiver + ".\n")
-	else:
-		# Si el archivo no existe se preparan los datos para la primera transaccion
-		data = {}
-		timestamp = datetime.now().ctime()
-		data['transactions'].append({
-			'timestamp': timestamp,
-			'origin': code,
-			'coin': coin,
-			'amount': amount,
-			'receiver': receiver
-		})
-		# Se crea la cuenta con la primera transaccion
-		with open('accounts/' + receiver + '.json', 'w') as f:
-			json.dump(data, f, indent=4)
 
 
 # Funcion Recibir dinero
@@ -154,7 +124,7 @@ def receive(code):
 	if confirm == "si" or confirm == "":
 
 		# Si la cuenta existe se actualiza la nueva transaccion
-		if path.isfile('accounts/' + code + '.json'):
+		if path.exists('accounts/' + code + '.json'):
 
 			# Lectura del historial de transacciones
 			with open('accounts/' + code + '.json', 'r') as f:
@@ -165,26 +135,27 @@ def receive(code):
 			data['transactions'][coin].append({
 				'timestamp': timestamp,
 				'origin': "Deposit",
-				'amount': amount
+				'amount': amount,
+				'receiver': code
 			})
 
 			# Los datos se guardan en el archivo
 			with open('accounts/' + code + '.json', 'w') as f:
 				json.dump(data, f, indent=4)
 				print("\nSe han depositado " + str(amount) + " " + coin + " en la cuenta " + code + ".")
-		else:
-			# Si el archivo no existe se preparan los datos para la primera transaccion
-			data = {}
-			timestamp = datetime.now().ctime()
-			data['transactions'].append({
-				'timestamp': timestamp,
-				'origin': "Deposit",
-				'coin': coin,
-				'amount': amount
-			})
-			# Se crea la cuenta con la primera transaccion
-			with open('accounts/' + code + '.json', 'w') as f:
-				json.dump(data, f, indent=4)
+
+			# Lectura del historial de transacciones
+			with open('accounts/' + code + '.json', 'r') as f:
+				data = json.load(f)
+
+				# Consulta las transacciones y suma el total de los registros
+				transactions = data['transactions'][coin]
+
+				balance = 0
+				for value in transactions:
+					balance = balance + value['amount']
+
+				print("El nuevo saldo de " + coin + " en la cuenta es: " + str(balance) + " " + coin + ".\n")
 
 	elif confirm == "no":
 		success_end(code)
@@ -241,26 +212,109 @@ def balance_coin(code):
 	# En caso de que no, el programa termina al tercer intento incorrecto
 	while not coin == "BTC" and not coin == "ETH" and not coin == "XRP":
 		print ("Su billetera solo almacena las criptomonedas BTC, ETH y XRP.\n")
-		coin = input("Indique la moneda a transferir: ").upper()
+		coin = input("Indique la moneda a consultar saldo: ").upper()
 		i = i - 1
 		if i == 0:
 			print ("Has superado el límite de intentos. Hasta pronto!\n")
 			exit()
 
 	# Si la cuenta existe se actualiza la nueva transaccion
-	if path.isfile('accounts/' + code + '.json'):
+	if path.exists('accounts/' + code + '.json'):
 		# Lectura del historial de transacciones
 		with open('accounts/' + code + '.json', 'r') as f:
 			data = json.load(f)
 
-		values = data['transactions'][coin]['amount'].values()
-		print(values)
+	#
+	transactions = data['transactions'][coin]
+
+	balance = 0
+	for value in transactions:
+		balance = balance + value['amount']
+
+	binance_response = coinmarket_api()
+	coin_global_balance = balance * binance_response['data'][coin]['quote']['USD']['price']
+
+	print("\nEl saldo total de " + coin + " en la cuenta es: " + str(round(balance, 5)) + " " + coin + ".\n"
+																									   "El saldo equivalente en USD es: $" + str(
+		round(coin_global_balance, 2)))
+
+
+# Funcion consultar saldo total
+def global_balance(code):
+	code = code
+	if path.exists('accounts/' + code + '.json'):
+		# Lectura del historial de transacciones
+		with open('accounts/' + code + '.json', 'r') as f:
+			data = json.load(f)
+
+		transactions_btc = data['transactions']['BTC']
+		transactions_eth = data['transactions']['ETH']
+		transactions_xrp = data['transactions']['XRP']
+
+		def balance(transactions):
+			balance = 0
+			for value in transactions:
+				balance = balance + value['amount']
+			return balance
+
+		balance_btc = balance(transactions_btc)
+		balance_eth = balance(transactions_eth)
+		balance_xrp = balance(transactions_xrp)
+
+		binance_response = coinmarket_api()
+
+		balance_btcusd = balance_btc * binance_response['data']['BTC']['quote']['USD']['price']
+		balance_ethusd = balance_eth * binance_response['data']['ETH']['quote']['USD']['price']
+		balance_xrpusd = balance_xrp * binance_response['data']['XRP']['quote']['USD']['price']
+
+		wallet_global_balance = balance_btcusd + balance_ethusd + balance_xrpusd
+
+		print ("\nEl balance de Bitcoin es: " + str(balance_btc) + " BTC.")
+		print ("El balance de Ethereum es: " + str(balance_eth) + " ETH.")
+		print ("El balance de Ripple es: " + str(balance_xrp) + " XRP.\n")
+
+		print ("El saldo total de su billetera en USD es: $" + str(round(wallet_global_balance, 2)))
+
+
+# Funcion consultar historial
+def historical(code):
+	code = code
+	if path.exists('accounts/' + code + '.json'):
+		# Lectura del historial de transacciones
+		with open('accounts/' + code + '.json', 'r') as f:
+			data = json.load(f)
+
+		transactions_btc = data['transactions']['BTC']
+		transactions_eth = data['transactions']['ETH']
+		transactions_xrp = data['transactions']['XRP']
+
+		def history(transactions, coin):
+			if transactions:
+				total = 0
+				print ("\nFecha					Origen		Destino		Valor\n"
+					   "-------------------------------------------------------------------------------------")
+				for value in transactions:
+					print(str(value['timestamp']) + "		" +
+						  str(value['origin']) + "		" +
+						  str(value['receiver']) + "		" +
+						  str(round(value['amount'], 5)) + " " + coin)
+					total = total + value['amount']
+
+				print("-------------------------------------------------------------------------------------\n"
+					  "		T O T A L   D E   T R A N S A C C I O N E S		" +
+					  str(round(total, 4)) + " " + coin + "\n")
+			else:
+				print("\nNo se han realizado transacciones en moneda " + coin + ".")
+
+		history(transactions_btc, "BTC")
+		history(transactions_eth, "ETH")
+		history(transactions_xrp, "XRP")
 
 
 # Salir del programa
 def exit_program():
 	print ("Hasta pronto!\n")
-	exit()
+	Wallet()
 
 
 # Respuesta de una operacion exitosa
@@ -332,9 +386,17 @@ def operations(code):
 			balance_coin(code)
 			break
 		elif option == '4':
+			clear()
 			print("Ha escogido Mostrar balance general")
+			global_balance(code)
+			success_end(code)
+			break
 		elif option == '5':
-			print("Mostrar histórico de transacciones")
+			clear()
+			print("Ha escogido Mostrar histórico de transacciones")
+			historical(code)
+			success_end(code)
+			break
 		elif option == '6':
 			clear()
 			print ("Hasta pronto!\n")
@@ -352,10 +414,11 @@ class Wallet:
 		while True:
 			if i == 3:
 				print ("Bienvenido a su billetera de criptomonedas.\n")
-			self.account = input("1. Iniciar sesión con una cuenta existente.\n"
-								 "2. Crear nueva cuenta.\n"
-								 "3. Salir del programa.\n")
+				print ("1. Iniciar sesión con una cuenta existente.\n"
+					   "2. Crear nueva cuenta.\n"
+					   "3. Salir del programa.\n")
 
+			self.account = input("")
 			if self.account == '1':
 				code = input("\nIndique su código de cuenta: ").upper()
 				if path.exists('accounts/' + code + '.json'):
@@ -386,7 +449,7 @@ class Wallet:
 
 					if path.isfile('accounts/' + new_account + '.json'):
 						print("La cuenta " + new_account + " se ha creado correctamente.\n"
-							  "Ahora puede realizar transacciones.\n")
+														   "Ahora puede realizar transacciones.\n")
 						operations(new_account)
 						break
 				else:

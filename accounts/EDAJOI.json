@@ -1,0 +1,94 @@
+{
+    "account": [
+        {
+            "timestamp": "Sun Jun 28 10:29:00 2020",
+            "code": "EDAJOI"
+        }
+    ],
+    "transactions": {
+        "BTC": [
+            {
+                "timestamp": "Sun Jun 28 10:29:43 2020",
+                "origin": "Deposit",
+                "amount": 0.012,
+                "receiver": "EDAJOI"
+            },
+            {
+                "timestamp": "Sun Jun 28 11:18:35 2020",
+                "origin": "Deposit",
+                "amount": 0.01672,
+                "receiver": "EDAJOI"
+            },
+            {
+                "timestamp": "Sun Jun 28 11:19:30 2020",
+                "origin": "Deposit",
+                "amount": 0.0526,
+                "receiver": "EDAJOI"
+            },
+            {
+                "timestamp": "Sun Jun 28 12:15:51 2020",
+                "origin": "Deposit",
+                "amount": 0.0187,
+                "receiver": "EDAJOI"
+            },
+            {
+                "timestamp": "Sun Jun 28 15:34:45 2020",
+                "origin": "Deposit",
+                "amount": 0.786,
+                "receiver": "EDAJOI"
+            },
+            {
+                "timestamp": "Sun Jun 28 18:15:58 2020",
+                "origin": "Deposit",
+                "amount": 3.53,
+                "receiver": "EDAJOI"
+            },
+            {
+                "timestamp": "Sun Jun 28 22:14:17 2020",
+                "origin": "YBCOQ4",
+                "amount": 0.5,
+                "receiver": "EDAJOI"
+            }
+        ],
+        "ETH": [
+            {
+                "timestamp": "Sun Jun 28 18:20:39 2020",
+                "origin": "Deposit",
+                "amount": 2.45,
+                "receiver": "EDAJOI"
+            },
+            {
+                "timestamp": "Sun Jun 28 19:29:47 2020",
+                "origin": "Deposit",
+                "amount": 21.0,
+                "receiver": "EDAJOI"
+            }
+        ],
+        "XRP": [
+            {
+                "timestamp": "Sun Jun 28 18:36:39 2020",
+                "origin": "Deposit",
+                "amount": 2176.0,
+                "receiver": "EDAJOI"
+            },
+            {
+                "timestamp": "Sun Jun 28 18:57:34 2020",
+                "origin": "Deposit",
+                "amount": 3500.0,
+                "receiver": "EDAJOI"
+            },
+            {
+                "timestamp": "Sun Jun 28 19:01:29 2020",
+                "origin": "EDAJOI",
+                "amount": -2100.0,
+                "receiver": "VE7CWO"
+            },
+            {
+                "timestamp": "Sun Jun 28 21:48:05 2020",
+                "origin": "Deposit",
+                "amount": 1100.0,
+                "receiver": "EDAJOI"
+            }
+        ]
+    }
+}
