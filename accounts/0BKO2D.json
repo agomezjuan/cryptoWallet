@@ -6,7 +6,15 @@
         }
     ],
     "transactions": {
-        "BTC": [],
+        "BTC": [
+            {
+                "timestamp": "Mon Jun 29 23:59:51 2020",
+                "origin": "Deposit",
+                "amount": 1.5,
+                "USD": 13735.297206570001,
+                "receiver": "0BKO2D"
+            }
+        ],
         "ETH": [
             {
                 "timestamp": "Mon Jun 29 23:41:47 2020",

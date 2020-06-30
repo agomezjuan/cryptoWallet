@@ -12,12 +12,12 @@ from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
 
 
 # Consulta coinmarketcap
-def coinmarket_api():
+def coinmarket_api(coin):
 	# Llamado a la API de coinmarketcap
 	url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest'
 
 	parameters = {
-		'symbol': 'BTC,ETH,XRP'
+		'symbol': coin
 	}
 	headers = {
 		'Accepts': 'application/json',
@@ -41,9 +41,9 @@ def account_generator(size=6, chars=string.ascii_uppercase + string.digits):
 
 
 # Actualizar cuenta de origen
-def update_registry_sender(code, coin, amount, receiver):
+def transfer_update_sender(code, coin, amount, USD_amount, receiver):
 	# Si la cuenta existe se actualiza la nueva transaccion
-	if path.isfile('accounts/' + code + '.json'):
+	if path.exists('accounts/' + code + '.json'):
 		# Lectura del historial de transacciones
 		with open('accounts/' + code + '.json', 'r') as f:
 			data = json.load(f)
@@ -54,6 +54,7 @@ def update_registry_sender(code, coin, amount, receiver):
 			'timestamp': timestamp,
 			'origin': code,
 			'amount': amount * (-1),
+			'USD': USD_amount,
 			'receiver': receiver
 		})
 
@@ -64,7 +65,7 @@ def update_registry_sender(code, coin, amount, receiver):
 
 
 # Actualizar cuenta destinataria
-def update_registry_receiver(code, coin, amount, receiver):
+def transfer_update_receiver(code, coin, amount, USD_amount, receiver):
 	# Si la cuenta existe se actualiza la nueva transaccion
 	if path.isfile('accounts/' + receiver + '.json'):
 		# Lectura del historial de transacciones
@@ -77,6 +78,7 @@ def update_registry_receiver(code, coin, amount, receiver):
 			'timestamp': timestamp,
 			'origin': code,
 			'amount': amount,
+			'USD': USD_amount,
 			'receiver': receiver
 		})
 
@@ -89,13 +91,13 @@ def update_registry_receiver(code, coin, amount, receiver):
 # Funcion Recibir dinero
 def receive(code):
 	code = code
-	coin = input("Indique la moneda a recibir: ").upper()
-	i = 2
+	coin = input("Indique la moneda a recibir (BTC, ETH, XRP o USD): ").upper()
 
 	# Ciclo verifica si la criptomoneda seleccionada se encuentra en la billetera.
 	# En caso de que no, el programa termina al tercer intento incorrecto
-	while not coin == "BTC" and not coin == "ETH" and not coin == "XRP":
-		print ("Su billetera solo almacena las criptomonedas BTC, ETH y XRP.\n")
+	i = 3
+	while not coin == "BTC" and not coin == "ETH" and not coin == "XRP" and not coin == "USD":
+		print ("Su billetera solo almacena las criptomonedas BTC, ETH, XRP y USD.\n")
 		coin = input("Indique la moneda a recibir: ").upper()
 		i = i - 1
 		if i == 0:
@@ -110,18 +112,35 @@ def receive(code):
 			break
 		except ValueError:
 			clear()
-			print("Debe indicar un valor numérico positivo.")
+			k = k
+			msg = "Debe indicar un valor numérico positivo. Límite de intentos " + str(k - 1) + ".\n"
+			invalid_input(k, msg)
 			k = k - 1
-			if k == 0:
-				clear()
-				print ("Has superado el límite de intentos. Hasta pronto!\n")
-				exit()
 
-	# Confirmacion de la cantidad a recibir en la moneda seleccionada
-	print ("\nUsted recibirá " + str(amount) + " " + coin + " en su cuenta.")
+	if coin == "USD":
+		print("\nPara depositar " + str(round(amount, 2)) + " USD debe convertirlos a criptomoneda.\n")
+		USD_amount = amount
+		confirm = input("¿Desea continuar? (si/no) ").upper()
+		if confirm == "S" or confirm == "SI" or confirm == "":
+			converted_coin = input("Indique la criptomoneda a convertir (BTC, ETH y XRP): ").upper()
+			binance_response = coinmarket_api(converted_coin)
+			coin_price = binance_response['data'][converted_coin]['quote']['USD']['price']
+			converted_amount = amount / coin_price
+			print("\nUsted recibirá " + str(round(converted_amount, 5)) + " " + converted_coin + " en su cuenta.")
 
-	confirm = input("¿Desea continuar? (si/no) ")
-	if confirm == "si" or confirm == "":
+			# Se reasignan los valores de las variables
+			coin = converted_coin
+			amount = converted_amount
+
+	else:
+		# Confirmacion de la cantidad a recibir en la moneda seleccionada
+		print ("\nUsted recibirá " + str(amount) + " " + coin + " en su cuenta.")
+		binance_response = coinmarket_api(coin)
+		coin_price = binance_response['data'][coin]['quote']['USD']['price']
+		USD_amount = amount * coin_price
+
+	confirm = input("¿Desea continuar? (si/no) ").upper()
+	if confirm == "S" or confirm == "SI" or confirm == "":
 
 		# Si la cuenta existe se actualiza la nueva transaccion
 		if path.exists('accounts/' + code + '.json'):
@@ -136,13 +155,14 @@ def receive(code):
 				'timestamp': timestamp,
 				'origin': "Deposit",
 				'amount': amount,
+				'USD': USD_amount,
 				'receiver': code
 			})
 
 			# Los datos se guardan en el archivo
 			with open('accounts/' + code + '.json', 'w') as f:
 				json.dump(data, f, indent=4)
-				print("\nSe han depositado " + str(amount) + " " + coin + " en la cuenta " + code + ".")
+				print("\nSe han depositado " + str(round(amount, 5)) + " " + coin + " en la cuenta " + code + ".")
 
 			# Lectura del historial de transacciones
 			with open('accounts/' + code + '.json', 'r') as f:
@@ -155,23 +175,26 @@ def receive(code):
 				for value in transactions:
 					balance = balance + value['amount']
 
-				print("El nuevo saldo de " + coin + " en la cuenta es: " + str(balance) + " " + coin + ".\n")
+				print("El nuevo saldo de " + coin + " en la cuenta es: " + str(round(balance, 5)) + " " + coin + ".\n")
 
-	elif confirm == "no":
+	elif confirm == "N" or confirm == "NO":
+		print("\nHas cancelado la operación.")
 		success_end(code)
+
+	# else:
 
 
 # Funcion transferir dinero
 def transfer(code):
 	code = code
-	coin = input("Indique la moneda a transferir: ").upper()
-	i = 2
+	coin = input("Indique la moneda a transferir (BTC, ETH o XRP): ").upper()
 
 	# Ciclo verifica si la criptomoneda seleccionada se encuentra en la billetera.
 	# En caso de que no, el programa termina al tercer intento incorrecto
+	i = 2
 	while not coin == "BTC" and not coin == "ETH" and not coin == "XRP":
 		print ("Su billetera solo almacena las criptomonedas BTC, ETH y XRP.\n")
-		coin = input("Indique la moneda a transferir: ").upper()
+		coin = input("Indique la moneda a transferir (BTC, ETH o XRP): ").upper()
 		i = i - 1
 		if i == 0:
 			print ("Has superado el límite de intentos. Hasta pronto!\n")
@@ -185,8 +208,9 @@ def transfer(code):
 			break
 		except ValueError:
 			msg = "Por favor escriba un valor numérico: "
-			i = i - 1
+			i = i
 			invalid_input(i, msg)
+			i = i - 1
 
 	# Validacion de saldo suficiente
 	with open('accounts/' + code + '.json', 'r') as f:
@@ -217,27 +241,41 @@ def transfer(code):
 		# Cuenta de destino
 		receiver = input("Indique el código de cuenta de destino: ").upper()
 
-		if path.exists('accounts/' + receiver + '.json'):
-			# Confirmacion de la cantidad a recibir en la moneda seleccionada
-			print ("\nUsted transferirá " + str(amount) + " " + coin + " a la cuenta " + receiver + ".")
-			confirm = input("¿Desea continuar? (si/no) ")
+		if not receiver == code:
+			if path.exists('accounts/' + receiver + '.json'):
+				# Confirmacion de la cantidad a recibir en la moneda seleccionada
+				print ("\nUsted transferirá " + str(amount) + " " + coin + " a la cuenta " + receiver + ".")
+				confirm = input("¿Desea continuar? (si/no) ").upper()
 
-			if confirm == "si" or confirm == "":
-				update_registry_sender(code, coin, amount, receiver)
-				update_registry_receiver(code, coin, amount, receiver)
-				success_end(code)
-				break
-			elif confirm == "no":
-				success_end(code)
+				if confirm == "S" or confirm == "SI" or confirm == "":
+
+					binance_response = coinmarket_api(coin)
+					coin_price = binance_response['data'][coin]['quote']['USD']['price']
+					USD_amount = amount * coin_price
+
+					transfer_update_sender(code, coin, amount, USD_amount, receiver)
+					transfer_update_receiver(code, coin, amount, USD_amount, receiver)
+					success_end(code)
+					break
+				elif confirm == "N" or confirm == "NO":
+					print("\nHas cancelado la operación.")
+					success_end(code)
+			else:
+				msg = "\nEste código de cuenta no existe. Por favor verifique e intente nuevamente."
+				j = j
+				invalid_input(j, msg, False)
+				j = j - 1
 		else:
-			msg = "Este código de cuenta no existe. Por favor verifique e intente nuevamente."
-			invalid_input(j, msg)
+			msg = "\nNo están permitidas las transferencias a tu propia cuenta."
+			j = j
+			invalid_input(j, msg, False)
+			j = j - 1
 
 
 # Funcion consultar saldo
 def balance_coin(code):
 	code = code
-	coin = input("Indique la moneda a consultar saldo: ").upper()
+	coin = input("Indique la moneda a consultar saldo (BTC, ETH o XRP): ").upper()
 	i = 2
 
 	# Ciclo verifica si la criptomoneda seleccionada se encuentra en la billetera.
@@ -263,7 +301,7 @@ def balance_coin(code):
 	for value in transactions:
 		balance = balance + value['amount']
 
-	binance_response = coinmarket_api()
+	binance_response = coinmarket_api('BTC,ETH,XRP')
 	coin_global_balance = balance * binance_response['data'][coin]['quote']['USD']['price']
 
 	print("\nEl saldo total de " + coin + " en la cuenta es: " + str(round(balance, 5)) + " " + coin + ".\n"
@@ -275,6 +313,7 @@ def balance_coin(code):
 def global_balance(code):
 	code = code
 	if path.exists('accounts/' + code + '.json'):
+		print("\nConsultando saldos...\n")
 		# Lectura del historial de transacciones
 		with open('accounts/' + code + '.json', 'r') as f:
 			data = json.load(f)
@@ -293,7 +332,7 @@ def global_balance(code):
 		balance_eth = balance(transactions_eth)
 		balance_xrp = balance(transactions_xrp)
 
-		binance_response = coinmarket_api()
+		binance_response = coinmarket_api('BTC,ETH,XRP')
 
 		balance_btcusd = balance_btc * binance_response['data']['BTC']['quote']['USD']['price']
 		balance_ethusd = balance_eth * binance_response['data']['ETH']['quote']['USD']['price']
@@ -325,20 +364,23 @@ def historical(code):
 		def history(transactions, coin):
 			if transactions:
 				total = 0
-				print ("\nFecha					Origen		Destino		Valor\n"
+				totalUSD = 0
+				print ("\nFecha				Origen  	Destino 	Valor 		USD\n"
 					   "-------------------------------------------------------------------------------------")
 				for value in transactions:
-					print(str(value['timestamp']) + "		" +
-						  str(value['origin']) + "		" +
-						  str(value['receiver']) + "		" +
-						  str(round(value['amount'], 5)) + " " + coin)
+					print(str(value['timestamp']) + "	" +
+						  str(value['origin']) + "  	" +
+						  str(value['receiver']) + "  	" +
+						  str(round(value['amount'], 5)) + " " + coin + "  	" +
+						  "$ " + str(round(value['USD'], 2)))
 					total = total + value['amount']
+					totalUSD = totalUSD + value['USD']
 
 				print("-------------------------------------------------------------------------------------\n"
-					  "		T O T A L   D E   T R A N S A C C I O N E S		" +
-					  str(round(total, 4)) + " " + coin + "\n")
+					  "Número de transacciones " + str(len(transactions)) + "			BALANCE TOTAL	" +
+					  str(round(total, 4)) + " " + coin + "	$ " + str(round(totalUSD, 2)) + "\n")
 			else:
-				print("\nNo se han realizado transacciones en moneda " + coin + ".")
+				print("\nNo se han realizado transacciones en criptomoneda " + coin + ".")
 
 		history(transactions_btc, "BTC")
 		history(transactions_eth, "ETH")
@@ -354,13 +396,16 @@ def exit_program():
 # Respuesta de una operacion exitosa
 def success_end(code):
 	code = code
-	print ("\nGracias por usar su billetera.\n")
-	restart = input("¿Desea realizar otra operación? (si/no) ")
-	if restart == "si" or restart == "":
+	print ("\nGracias por usar Cripto Wallet.\n")
+	restart = input("¿Desea realizar otra operación? (si/no) ").upper()
+
+	yes = restart == "S" or restart == "SI" or restart == ""
+
+	if yes:
 		clear()
 		operations(code)
 	else:
-		exit_program()
+		Wallet()
 
 
 # Limpiar la pantalla
@@ -372,13 +417,14 @@ def clear():
 
 
 # Entradas incorrectas
-def invalid_input(count, msg=""):
+def invalid_input(count, msg="", clr=True):
 	count = count - 1
 	if count == 0:
-		print ("Has superado el límite de intentos. Hasta pronto!\n")
+		print ("\nHas superado el límite de intentos. Hasta pronto!\n")
 		exit()
 	else:
-		clear()
+		if clr:
+			clear()
 		print (msg)
 
 
@@ -390,10 +436,10 @@ def operations(code):
 	# En caso contrario el programa se cierra al tercer intento erroneo
 	while True:
 		if i == 3:
-			print ("Bienvenido a su billetera de criptomonedas.")
+			print ("Bienvenido a Cripto Wallet.")
 
-		print ("Por favor indique la operación que desea realizar:\n"
-			   "1. Recibir dinero\n"
+		print ("\nPor favor indique la operación que desea realizar:\n"
+			   "\n1. Recibir dinero\n"
 			   "2. Transferir dinero\n"
 			   "3. Mostrar balance en moneda específica\n"
 			   "4. Mostrar balance general\n"
@@ -404,19 +450,19 @@ def operations(code):
 
 		if option == '1':
 			clear()
-			print("Ha escogido Recibir dinero")
+			print("Ha escogido Recibir dinero.\n")
 			receive(code)
 			success_end(code)
 			break
 		elif option == '2':
 			clear()
-			print("Ha escogido Transferir dinero")
+			print("Ha escogido Transferir dinero.\n")
 			transfer(code)
 			success_end(code)
 			break
 		elif option == '3':
 			clear()
-			print("Ha escogido Mostrar balance en moneda específica")
+			print("Ha escogido Mostrar balance en moneda específica.\n")
 			balance_coin(code)
 			success_end(code)
 			break
@@ -437,8 +483,10 @@ def operations(code):
 			print ("Hasta pronto!\n")
 			Wallet()
 		else:
-			msg = "Seleccione una opción válida.\n"
+			msg = "Seleccione una opción válida. Límite de intentos " + str(i - 1) + "\n"
+			i = i
 			invalid_input(i, msg)
+			i = i - 1
 
 
 # Clase principal billetera
@@ -447,9 +495,9 @@ class Wallet:
 		clear()
 		i = 3
 		while True:
-			if i == 3:
-				print ("Bienvenido a su billetera de criptomonedas.\n")
-				print ("1. Iniciar sesión con una cuenta existente.\n"
+
+			print ("Bienvenido a Cripto Wallet.\n")
+			print ("1. Iniciar sesión con una cuenta existente.\n"
 					   "2. Crear nueva cuenta.\n"
 					   "3. Salir del programa.\n")
 
@@ -469,8 +517,8 @@ class Wallet:
 			elif self.account == '2':
 				clear()
 				print ("Está a punto de crear una nueva cuenta de criptomonedas BTC, ETH y XRP.")
-				confirm = input("¿Desea continuar? (si/no) ")
-				if confirm == "si" or confirm == "":
+				confirm = input("¿Desea continuar? (si/no) ").upper()
+				if confirm == "S" or confirm == "SI" or confirm == "":
 					new_account = account_generator()
 					data = {'account': [], 'transactions': {'BTC': [], 'ETH': [], 'XRP': []}}
 					timestamp = datetime.now().ctime()
@@ -483,17 +531,20 @@ class Wallet:
 						json.dump(data, f, indent=4)
 
 					if path.isfile('accounts/' + new_account + '.json'):
-						print("La cuenta " + new_account + " se ha creado correctamente.\n"
+						print("\nLa cuenta " + new_account + " se ha creado correctamente.\n"
 														   "Ahora puede realizar transacciones.\n")
 						operations(new_account)
 						break
 				else:
 					exit_program()
 			elif self.account == '3':
+				clear()
 				exit()
 			else:
 				msg = "Seleccione una opción válida.\n"
+				i = i
 				invalid_input(i, msg)
+				i = i - 1
 
 
 if __name__ == '__main__':
