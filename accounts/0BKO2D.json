@@ -1,0 +1,21 @@
+{
+    "account": [
+        {
+            "timestamp": "Mon Jun 29 23:41:06 2020",
+            "code": "0BKO2D"
+        }
+    ],
+    "transactions": {
+        "BTC": [],
+        "ETH": [
+            {
+                "timestamp": "Mon Jun 29 23:41:47 2020",
+                "origin": "Deposit",
+                "amount": 19.722103681598895,
+                "USD": 4500.0,
+                "receiver": "0BKO2D"
+            }
+        ],
+        "XRP": []
+    }
+}
