@@ -1,0 +1,65 @@
+{
+    "account": [
+        {
+            "timestamp": "Tue Jun 30 00:35:31 2020",
+            "code": "91K8DY"
+        }
+    ],
+    "transactions": {
+        "BTC": [
+            {
+                "timestamp": "Tue Jun 30 00:39:07 2020",
+                "origin": "Deposit",
+                "amount": 0.010917003376123675,
+                "USD": 100.0,
+                "receiver": "91K8DY"
+            },
+            {
+                "timestamp": "Tue Jun 30 00:40:53 2020",
+                "origin": "91K8DY",
+                "amount": -0.005,
+                "USD": 45.7693782806,
+                "receiver": "0BKO2D"
+            },
+            {
+                "timestamp": "Tue Jun 30 11:54:02 2020",
+                "origin": "Deposit",
+                "amount": 0.037079806003936906,
+                "USD": 340.0,
+                "receiver": "91K8DY"
+            }
+        ],
+        "ETH": [
+            {
+                "timestamp": "Tue Jun 30 00:43:30 2020",
+                "origin": "Deposit",
+                "amount": 0.155,
+                "USD": 35.240193875755,
+                "receiver": "91K8DY"
+            },
+            {
+                "timestamp": "Tue Jun 30 00:55:50 2020",
+                "origin": "Deposit",
+                "amount": 0.4397237823274161,
+                "USD": 100.0,
+                "receiver": "91K8DY"
+            }
+        ],
+        "XRP": [
+            {
+                "timestamp": "Tue Jun 30 00:44:00 2020",
+                "origin": "Deposit",
+                "amount": 0.2,
+                "USD": 0.035519357055,
+                "receiver": "91K8DY"
+            },
+            {
+                "timestamp": "Tue Jun 30 00:44:31 2020",
+                "origin": "Deposit",
+                "amount": 1125.7100734061892,
+                "USD": 200.0,
+                "receiver": "91K8DY"
+            }
+        ]
+    }
+}

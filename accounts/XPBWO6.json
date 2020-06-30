@@ -1,0 +1,21 @@
+{
+    "account": [
+        {
+            "timestamp": "Tue Jun 30 11:55:12 2020",
+            "code": "XPBWO6"
+        }
+    ],
+    "transactions": {
+        "BTC": [],
+        "ETH": [],
+        "XRP": [
+            {
+                "timestamp": "Tue Jun 30 11:57:00 2020",
+                "origin": "Deposit",
+                "amount": 141.48785436579277,
+                "USD": 25.0,
+                "receiver": "XPBWO6"
+            }
+        ]
+    }
+}

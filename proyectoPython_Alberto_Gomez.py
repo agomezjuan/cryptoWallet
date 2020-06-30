@@ -37,10 +37,12 @@ def coinmarket_api(coin):
 
 # Funcion crear nueva cuenta
 def account_generator(size=6, chars=string.ascii_uppercase + string.digits):
+	# Se genera un codigo de cuenta aleatorio de 6 caracteres
 	return ''.join(random.choice(chars) for _ in range(size))
 
 
 # Actualizar cuenta de origen
+# Esta funcion recibe por parametros todos los datos que se van a registrar en la transaccion
 def transfer_update_sender(code, coin, amount, USD_amount, receiver):
 	# Si la cuenta existe se actualiza la nueva transaccion
 	if path.exists('accounts/' + code + '.json'):
@@ -102,7 +104,7 @@ def receive(code):
 		i = i - 1
 		if i == 0:
 			print ("Has superado el límite de intentos. Hasta pronto!\n")
-			exit()
+			exit_program()
 
 	k = 3
 	while True:
@@ -132,6 +134,11 @@ def receive(code):
 			coin = converted_coin
 			amount = converted_amount
 
+		elif confirm == "N" or confirm == "NO":
+			print("\nHas cancelado la operación.")
+			success_end(code)
+
+
 	else:
 		# Confirmacion de la cantidad a recibir en la moneda seleccionada
 		print ("\nUsted recibirá " + str(amount) + " " + coin + " en su cuenta.")
@@ -148,7 +155,8 @@ def receive(code):
 			# Lectura del historial de transacciones
 			with open('accounts/' + code + '.json', 'r') as f:
 				data = json.load(f)
-
+			if coin == 'USD':
+				coin = converted_coin
 			# Nueva transaccion para actualizar
 			timestamp = datetime.now().ctime()
 			data['transactions'][coin].append({
@@ -181,8 +189,6 @@ def receive(code):
 		print("\nHas cancelado la operación.")
 		success_end(code)
 
-	# else:
-
 
 # Funcion transferir dinero
 def transfer(code):
@@ -197,8 +203,8 @@ def transfer(code):
 		coin = input("Indique la moneda a transferir (BTC, ETH o XRP): ").upper()
 		i = i - 1
 		if i == 0:
-			print ("Has superado el límite de intentos. Hasta pronto!\n")
-			exit()
+			print ("Has superado el límite de intentos.\n")
+			exit_program()
 
 	i = 7
 	while True:
@@ -378,7 +384,7 @@ def historical(code):
 
 				print("-------------------------------------------------------------------------------------\n"
 					  "Número de transacciones " + str(len(transactions)) + "			BALANCE TOTAL	" +
-					  str(round(total, 4)) + " " + coin + "	$ " + str(round(totalUSD, 2)) + "\n")
+					  str(round(total, 4)) + "  " + coin + "	$ " + str(round(totalUSD, 2)) + "\n")
 			else:
 				print("\nNo se han realizado transacciones en criptomoneda " + coin + ".")
 
@@ -421,7 +427,7 @@ def invalid_input(count, msg="", clr=True):
 	count = count - 1
 	if count == 0:
 		print ("\nHas superado el límite de intentos. Hasta pronto!\n")
-		exit()
+		exit_program()
 	else:
 		if clr:
 			clear()
